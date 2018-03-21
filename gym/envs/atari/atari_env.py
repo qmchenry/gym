@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import os
 import gym
 from gym import error, spaces
@@ -33,6 +34,7 @@ class AtariEnv(gym.Env, utils.EzPickle):
         self.frameskip = frameskip
         self.ale = atari_py.ALEInterface()
         self.viewer = None
+        self.runningReward = 0
 
         # Tune (or disable) ALE's action repeat:
         # https://github.com/openai/gym/issues/349
@@ -74,6 +76,13 @@ class AtariEnv(gym.Env, utils.EzPickle):
         for _ in range(num_steps):
             reward += self.ale.act(action)
         ob = self._get_obs()
+
+        self.runningReward += reward
+        if not self.ale.game_over() and random.random() > 0.001:
+            reward = 0
+        else:
+            reward = self.runningReward
+            self.runningReward = 0
 
         return ob, reward, self.ale.game_over(), {"ale.lives": self.ale.lives()}
 
